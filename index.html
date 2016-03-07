@@ -94,6 +94,7 @@
       <form>
         <p>
           <label>Scale by <select id="field"></select></label>
+          <label>Color by <select id="colorfield"></select></label>
           <label>in <select id="year"></select></label>
           <span id="status"></span>
         </p>
@@ -138,13 +139,14 @@
             {name: "Net Domestic Migration Rate", id: "domesticmigrate", key: "RDOMESTICMIG%d", years: [2011], format: percent},
             {name: "Net Migration Rate", id: "netmigrate", key: "RNETMIG%d", years: [2011], format: percent},
           ],
-          years = [2010, 2011,2014],
+          years = [2010, 2011, 2014],
           fieldsById = d3.nest()
             .key(function(d) { return d.id; })
             .rollup(function(d) { return d[0]; })
             .map(fields),
-          field = fields[0],
-          year = years[0],
+          field = fields[2],
+          colorField = fields[2],
+          year = years[2],
           colors = colorbrewer.RdYlBu[3]
             .reverse()
             .map(function(rgb) { return d3.hsl(rgb); });
@@ -155,7 +157,7 @@
       var fieldSelect = d3.select("#field")
         .on("change", function(e) {
           field = fields[this.selectedIndex];
-          location.hash = "#" + [field.id, year].join("/");
+          location.hash = "#" + [field.id, colorField.id, year].join("/");
         });
 
       fieldSelect.selectAll("option")
@@ -168,7 +170,7 @@
       var yearSelect = d3.select("#year")
         .on("change", function(e) {
           year = years[this.selectedIndex];
-          location.hash = "#" + [field.id, year].join("/");
+          location.hash = "#" + [field.id, colorField.id, year].join("/");
         });
 
       yearSelect.selectAll("option")
@@ -177,6 +179,19 @@
         .append("option")
           .attr("value", function(y) { return y; })
           .text(function(y) { return y; })
+
+      var colorSelect = d3.select("#colorfield")
+        .on("change", function(e) {
+          colorField = fields[this.selectedIndex];
+          location.hash = "#" + [field.id, colorField.id, year].join("/");
+        });
+
+      colorSelect.selectAll("option")
+        .data(fields)
+        .enter()
+        .append("option")
+          .attr("value", function(d) { return d.id; })
+          .text(function(d) { return d.name; });
 
       var map = d3.select("#map"),
           zoom = d3.behavior.zoom()
@@ -326,7 +341,7 @@
           .duration(750)
           .ease("linear")
           .attr("fill", function(d) {
-            return color(value(d));
+            return color(600000);
           })
           .attr("d", carto.path);
 
@@ -355,7 +370,8 @@
       function parseHash() {
         var parts = location.hash.substr(1).split("/"),
             desiredFieldId = parts[0],
-            desiredYear = +parts[1];
+            desiredColorId = +parts[1],
+            desiredYear = +parts[2];
 
         field = fieldsById[desiredFieldId] || fields[0];
         year = (years.indexOf(desiredYear) > -1) ? desiredYear : years[0];
@@ -371,7 +387,7 @@
 
           if (field.years) {
             if (field.years.indexOf(year) === -1) {
-              year = field.years[0];
+              year = field.years[2];
             }
             yearSelect.selectAll("option")
               .attr("disabled", function(y) {
@@ -387,7 +403,7 @@
             .attr("disabled", null);
 
           deferredUpdate();
-          location.replace("#" + [field.id, year].join("/"));
+          location.replace("#" + [field.id, colorField.id, year].join("/"));
 
           hashish.attr("href", function(href) {
             return href + location.hash;
