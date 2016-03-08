@@ -341,7 +341,7 @@
           .duration(750)
           .ease("linear")
           .attr("fill", function(d) {
-            return color(600000);
+            return color(value(d));
           })
           .attr("d", carto.path);
 
